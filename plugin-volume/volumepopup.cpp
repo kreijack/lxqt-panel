@@ -127,6 +127,7 @@ void VolumePopup::handleSliderValueChanged(int value)
         return;
     // qDebug("VolumePopup::handleSliderValueChanged: %d\n", value);
     m_device->setVolume(value);
+    m_volumeFloat = value;
     QTimer::singleShot(0, this, [this] { QToolTip::showText(QCursor::pos(), m_volumeSlider->toolTip()); });
 }
 
@@ -140,7 +141,7 @@ void VolumePopup::handleMuteToggleClicked()
 
 void VolumePopup::handleDeviceVolumeChanged(int volume)
 {
-    // qDebug() << "handleDeviceVolumeChanged" << "volume" << volume << "max" << max;
+    // qDebug() << "handleDeviceVolumeChanged" << "volume" << volume ;
     // calling m_volumeSlider->setValue will trigger
     // handleSliderValueChanged(), which set the device volume
     // again, so we have to block the signals to avoid recursive
@@ -150,6 +151,7 @@ void VolumePopup::handleDeviceVolumeChanged(int volume)
     m_volumeSlider->setToolTip(QStringLiteral("%1%").arg(volume));
     dynamic_cast<QWidget&>(*parent()).setToolTip(m_volumeSlider->toolTip()); //parent is the button on panel
     m_volumeSlider->blockSignals(false);
+    m_volumeFloat = volume;
 
     // emit volumeChanged(percent);
     updateStockIcon();
@@ -197,8 +199,13 @@ void VolumePopup::openAt(QPoint pos, Qt::Corner anchor)
 
 void VolumePopup::handleWheelEvent(QWheelEvent *event)
 {
-    m_volumeSlider->setSliderPosition(m_volumeSlider->sliderPosition()
-            + (event->angleDelta().y() / QWheelEvent::DefaultDeltasPerStep * m_volumeSlider->singleStep()));
+	m_volumeFloat += 1.0 * event->angleDelta().y() /
+		QWheelEvent::DefaultDeltasPerStep * m_volumeSlider->singleStep();
+	if (m_volumeFloat > m_volumeSlider->maximum())
+		m_volumeFloat = m_volumeSlider->maximum();
+	if (m_volumeFloat < m_volumeSlider->minimum())
+		m_volumeFloat = m_volumeSlider->minimum();
+	m_volumeSlider->setSliderPosition(m_volumeFloat);
 }
 
 void VolumePopup::setDevice(AudioDevice *device)

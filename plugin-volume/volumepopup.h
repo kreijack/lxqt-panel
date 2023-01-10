@@ -81,6 +81,7 @@ private:
     QPoint m_pos;
     Qt::Corner m_anchor;
     AudioDevice *m_device;
+    float m_volumeFloat;
 };
 
 #endif // VOLUMEPOPUP_H
